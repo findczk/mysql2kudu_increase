@@ -14,66 +14,73 @@ import java.util.Arrays;
 
 public class MyKuduSink  extends RichSinkFunction<ConsumerRecord<String,String>> {
 
-    KuduClient kuduClient = null;
+    //KuduClient kuduClient = null;
+    KuduUtil kuduUtil = null;
+
     KuduSession kuduSession = null;
+    //KuduTable kuduTable = null;
+    //final static String tableName = "chenzhikun_test_for_SubTable";
+
     @Override
     public void invoke(ConsumerRecord<String, String> value, Context context) throws Exception {
-        if( null == kuduClient || null == kuduSession ){
-            kuduClient = new KuduClient.KuduClientBuilder("10.20.0.197:7051,10.20.0.198:7051,10.20.0.199:7051")
-                    .defaultAdminOperationTimeoutMs(60000).defaultSocketReadTimeoutMs(60000).defaultOperationTimeoutMs(60000).build();
-            // 获取一个会话
-            KuduSession session = kuduClient.newSession();
-            session.setTimeoutMillis(60000);
-            session.setFlushMode(SessionConfiguration.FlushMode.MANUAL_FLUSH);
-            session.setMutationBufferSpace(10000);
+        if (null == kuduUtil){
+            kuduUtil = new KuduUtil();
         }
-        processEveryRow(value,kuduClient,kuduSession);
-
-
+        processEveryRow(value,kuduUtil);
     }
 
     @Override
     public void open(Configuration parameters) throws Exception {
         super.open(parameters);
-        kuduClient = new KuduClient.KuduClientBuilder("10.20.0.197:7051,10.20.0.198:7051,10.20.0.199:7051")
+       /* kuduClient = new KuduClient.KuduClientBuilder("10.20.0.197:7051,10.20.0.198:7051,10.20.0.199:7051")
                 .defaultAdminOperationTimeoutMs(60000).defaultSocketReadTimeoutMs(60000).defaultOperationTimeoutMs(60000).build();
         // 获取一个会话
-        KuduSession session = kuduClient.newSession();
-        session.setTimeoutMillis(60000);
-        session.setFlushMode(SessionConfiguration.FlushMode.MANUAL_FLUSH);
-        session.setMutationBufferSpace(10000);
+        kuduSession = getKuduSession(kuduClient);*/
+        kuduUtil = new KuduUtil();
+
     }
 
     @Override
     public void close() throws Exception {
         super.close();
-        kuduClient.close();
-        kuduSession.close();
+        kuduUtil.close();
+    }
+
+    public KuduSession getKuduSession(KuduClient kuduClient){
+        kuduSession = kuduClient.newSession();
+        kuduSession.setTimeoutMillis(60000);
+        kuduSession.setFlushMode(SessionConfiguration.FlushMode.MANUAL_FLUSH);
+        kuduSession.setMutationBufferSpace(10000);
+        return kuduSession;
     }
 
     //对每条数据进行处理
-    public void processEveryRow(ConsumerRecord<String,String> row , KuduClient kuduClient, KuduSession kuduSession) throws KuduException {
-        KuduUtil kuduUtil = new KuduUtil();
-        String tableName = getTableName(row);
-        KuduTable kuduTable = kuduClient.openTable(tableName);
+    public void processEveryRow(ConsumerRecord<String,String> row , KuduUtil kuduUtil) throws KuduException {
 
-        String[] tableNameArr = new String[]{};
+
+        String tableName = "chenzhikun_test_for_SubTable";
+        //kuduTable = kuduClient.openTable(tableName);
+        final KuduTable kuduTable = kuduUtil.getKuduTable(tableName);
+        String[] tableNameArr = new String[]{"chenzhikun_test_for_SubTable"};
         if(Arrays.asList(tableNameArr).contains(tableName)){
             String data = JSON.parseObject(row.value()).getOrDefault("data","").toString();
-            if(StringUtils.isNullOrWhitespaceOnly(data)){
+            if ("".equals(data)){
                 System.out.println(tableName + "'s data is null.");
             }else{
                 String rowType = JSON.parseObject(row.value()).getOrDefault("type","").toString();
                 if("INSERT".equals(rowType) || "UPDATE".equals(rowType)){
                     kuduUtil.upsertRecordToKudu(kuduTable,row);
+                    System.out.println("添加或更新了>>>>" +  data);
                 }else if("DELETE".equals(rowType)){
-
+                    kuduUtil.deleteRecordFromKudu(kuduTable,row);
+                    System.out.println("删除了>>>>>  " +data);
                 }
 
             }
 
         }else{
             System.out.println("表" + tableName + "不在kudu过滤范围");
+
         }
 
     }

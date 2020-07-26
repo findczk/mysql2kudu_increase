@@ -10,7 +10,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <!--Flink 版本-->
-        <flink.version>1.11.0</flink.version>
+        <flink.version>1.10.0</flink.version>
         <!--JDK 版本-->
         <java.version>1.8</java.version>
         <!--Scala 2.11 版本-->
@@ -34,7 +34,7 @@
         <dependency>
             <groupId>org.apache.kudu</groupId>
             <artifactId>kudu-client</artifactId>
-            <version>1.11.0</version>
+            <version>1.10.0</version>
         </dependency>
 
         <!-- Apache Flink dependencies -->
@@ -75,7 +75,7 @@
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-avro</artifactId>
-            <version>1.11.0</version>
+            <version>${flink.version}</version>
         </dependency>
 
         <!-- Add logging framework, to produce console output when running in the IDE. -->
