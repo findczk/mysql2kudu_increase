@@ -10,17 +10,12 @@ import org.apache.kudu.client.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 
-public class MyKuduSink  extends RichSinkFunction<ConsumerRecord<String,String>> {
-
-    //KuduClient kuduClient = null;
+public class KuduSink extends RichSinkFunction<ConsumerRecord<String,String>> {
     KuduUtil kuduUtil = null;
-
     KuduSession kuduSession = null;
-    //KuduTable kuduTable = null;
-    //final static String tableName = "chenzhikun_test_for_SubTable";
-
     @Override
     public void invoke(ConsumerRecord<String, String> value, Context context) throws Exception {
         if (null == kuduUtil){
@@ -32,10 +27,6 @@ public class MyKuduSink  extends RichSinkFunction<ConsumerRecord<String,String>>
     @Override
     public void open(Configuration parameters) throws Exception {
         super.open(parameters);
-       /* kuduClient = new KuduClient.KuduClientBuilder("10.20.0.197:7051,10.20.0.198:7051,10.20.0.199:7051")
-                .defaultAdminOperationTimeoutMs(60000).defaultSocketReadTimeoutMs(60000).defaultOperationTimeoutMs(60000).build();
-        // 获取一个会话
-        kuduSession = getKuduSession(kuduClient);*/
         kuduUtil = new KuduUtil();
 
     }
@@ -56,12 +47,10 @@ public class MyKuduSink  extends RichSinkFunction<ConsumerRecord<String,String>>
 
     //对每条数据进行处理
     public void processEveryRow(ConsumerRecord<String,String> row , KuduUtil kuduUtil) throws KuduException {
-
-
         String tableName = "chenzhikun_test_for_SubTable";
         //kuduTable = kuduClient.openTable(tableName);
         final KuduTable kuduTable = kuduUtil.getKuduTable(tableName);
-        String[] tableNameArr = new String[]{"chenzhikun_test_for_SubTable"};
+        String[] tableNameArr = new String[]{tableName}; // 要过滤的表的数组
         if(Arrays.asList(tableNameArr).contains(tableName)){
             String data = JSON.parseObject(row.value()).getOrDefault("data","").toString();
             if ("".equals(data)){
@@ -75,14 +64,10 @@ public class MyKuduSink  extends RichSinkFunction<ConsumerRecord<String,String>>
                     kuduUtil.deleteRecordFromKudu(kuduTable,row);
                     System.out.println("删除了>>>>>  " +data);
                 }
-
             }
-
         }else{
             System.out.println("表" + tableName + "不在kudu过滤范围");
-
         }
-
     }
 
     //获取表名

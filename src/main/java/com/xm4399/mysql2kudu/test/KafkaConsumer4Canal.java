@@ -1,21 +1,12 @@
 package com.xm4399.mysql2kudu.test;
 
 import com.xm4399.mysql2kudu.util.KafkaStringSchema;
-import com.xm4399.mysql2kudu.util.MyKuduSink;
-import org.apache.flink.api.common.serialization.SimpleStringSchema;
-import org.apache.flink.api.common.typeinfo.TypeInformation;
-import org.apache.flink.streaming.api.datastream.DataStream;
+import com.xm4399.mysql2kudu.util.KuduSink;
 import org.apache.flink.streaming.api.datastream.DataStreamSink;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.streaming.api.functions.sink.RichSinkFunction;
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer;
-import org.apache.flink.streaming.connectors.kafka.KafkaDeserializationSchema;
-import org.apache.flink.streaming.connectors.kafka.KafkaSerializationSchema;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.clients.consumer.ConsumerRecords;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
 
-import java.util.Arrays;
 import java.util.Properties;
 
 public class KafkaConsumer4Canal {
@@ -35,7 +26,7 @@ public class KafkaConsumer4Canal {
 
         DataStreamSink<ConsumerRecord<String,String>> stream = env
                 .addSource(new FlinkKafkaConsumer<ConsumerRecord<String,String>>("chenzhikun_test", new KafkaStringSchema(), properties))
-                .addSink(new MyKuduSink());
+                .addSink(new KuduSink());
         env.execute();
     }
 
